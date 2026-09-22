@@ -3,7 +3,7 @@
 Deployments onto the homelab VMs.
 
 - `compose/<vm>/<service>/compose.yaml` — services on Docker VMs.
-- `clusters/prod/` — manifests for Flux. **Phase 6, does not exist yet.**
+- `clusters/prod/` — manifests for ArgoCD. **Phase 6, does not exist yet.**
 
 ## CURRENT PHASE: 1 (Base)
 
