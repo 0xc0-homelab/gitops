@@ -25,6 +25,9 @@ The network is normative and lives in `../infrastructure/docs/zones.md`.
 
 - Everything written is in English: files, file names, comments, commits,
   branches and PRs.
+- No work without an issue on the org project board. The PR links it
+  (`Closes #N` / `Refs owner/repo#N`) or the `issue` check fails. See the
+  workspace `CLAUDE.md`, section Tracking.
 - **Images pinned by digest.** Never `latest`, never a tag alone.
 - **Never publish on `0.0.0.0`.** Bind to the IP of the matching zone.
 - **The WAF lives on `vm-edge`** (open-appsec). Do not duplicate it in the
