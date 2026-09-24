@@ -1,23 +1,27 @@
-# deployments
+# gitops
 
-Deployments onto the homelab VMs.
+What runs in the homelab's Kubernetes cluster, as manifests ArgoCD applies.
 
-- `compose/<vm>/<service>/compose.yaml` — services on Docker VMs.
-- `clusters/prod/` — manifests for ArgoCD. **Phase 6, does not exist yet.**
+- `clusters/prod/` — the manifests ArgoCD points at. **Phase 2, does not exist
+  yet.**
 
 ## CURRENT PHASE: 1 (Base)
 
-In phase 1 there are no workloads deployed. `vm-edge`, `vm-apps` and `vm-data`
-arrive in phase 2. If you are asked to deploy something before that, say so and stop.
+In phase 1 there is no cluster and nothing is deployed from here. The RKE2
+cluster arrives in phase 2 (workspace `docs/design.md`). If you are asked to
+deploy something before that, say so and stop.
 
-## Where each thing goes
+## What goes where
 
-| VM          | Zone      | IP           | Hosts                           | Phase |
-|-------------|-----------|--------------|---------------------------------|-------|
-| vm-edge     | edge      | 10.10.8.10   | cloudflared, NGINX, open-appsec | 2     |
-| vm-apps     | workloads | 10.10.16.10  | application containers          | 2     |
-| vm-data     | data      | 10.10.32.10  | Postgres, Redis                 | 2     |
-| vm-platform | platform  | 10.10.4.20   | Prometheus, Grafana             | 3     |
+One RKE2 cluster, in the `platform` zone, holds everything after phase 1:
+
+- **Shared services**: ArgoCD, Vault, Prometheus and Grafana, data services
+  (Postgres, Redis).
+- **Applications**.
+
+They are separated by namespace and NetworkPolicy. Traffic enters through the
+HAProxy load balancer in front of the cluster, and the ingress carries the WAF
+(open-appsec).
 
 The network is decided by `../infrastructure/environments/prod/terraform.tfvars`
 (`zones`, `vms`, `transit`) and explained in `../infrastructure/docs/zones.md`.
@@ -30,19 +34,17 @@ The network is decided by `../infrastructure/environments/prod/terraform.tfvars`
   (`Closes #N` / `Refs owner/repo#N`) or the `issue` check fails. See the
   workspace `CLAUDE.md`, section Tracking.
 - **Images pinned by digest.** Never `latest`, never a tag alone.
-- **Never publish on `0.0.0.0`.** Bind to the IP of the matching zone.
-- **The WAF lives on `vm-edge`** (open-appsec). Do not duplicate it in the
-  service. When RKE2 arrives in phase 6, the WAF moves to the ingress, never
-  duplicated.
-- **Every data volume declares its backup** in a comment: B2 destination and
-  frequency. Without that, the service is not deployed.
-- **Secrets through SOPS+age.** Never in the compose file nor in a cleartext
-  `.env`. The `.sops.yaml` suffix is mandatory.
-- `vm-data` does not initiate outbound connections. If a data service needs to
-  reach out, the design is wrong.
-- Admin dashboards (Grafana, Vault UI, Proxmox) **are not published through
-  `vm-edge`**. They are reached through the `vm-access` tunnel with
-  Access+WARP.
+- **The WAF lives at the ingress** (open-appsec). Do not duplicate it in a
+  service.
+- **Every namespace denies by default** and opens only what it needs, with
+  NetworkPolicies. Data services accept connections and initiate none.
+- **Every persistent volume declares its backup** in a comment: destination
+  and frequency. Without that, the service is not deployed.
+- **Secrets:** what the cluster needs to boot comes from SOPS+age; everything
+  else from Vault, from phase 3. Never a secret in cleartext in a manifest.
+- **Portals** (Grafana, ArgoCD) are published only behind Cloudflare Access.
+  **Vault, the Kubernetes API and other admin interfaces are never published**:
+  they are reached over WARP.
 
 ## Promotion
 
@@ -51,5 +53,6 @@ rebuilt between environments.
 
 ## Before opening a PR
 
-Validate with `docker compose config`. For changes touching ports or exposure,
-run `homelab:network-reviewer`.
+For changes touching exposure or NetworkPolicies, run
+`homelab:network-reviewer`. The manifest validation tooling is declared in
+`mise.toml` when the cluster arrives.
