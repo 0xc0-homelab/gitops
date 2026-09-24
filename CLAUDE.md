@@ -7,19 +7,20 @@ Deployments onto the homelab VMs.
 
 ## CURRENT PHASE: 1 (Base)
 
-In phase 1 there are no workloads deployed. `vm-apps` and `vm-data` arrive in
-phase 2. If you are asked to deploy something before that, say so and stop.
+In phase 1 there are no workloads deployed. `vm-edge`, `vm-apps` and `vm-data`
+arrive in phase 2. If you are asked to deploy something before that, say so and stop.
 
 ## Where each thing goes
 
 | VM          | Zone      | IP           | Hosts                           | Phase |
 |-------------|-----------|--------------|---------------------------------|-------|
-| vm-edge     | edge      | 10.10.8.10   | cloudflared, NGINX, open-appsec | 1     |
+| vm-edge     | edge      | 10.10.8.10   | cloudflared, NGINX, open-appsec | 2     |
 | vm-apps     | workloads | 10.10.16.10  | application containers          | 2     |
 | vm-data     | data      | 10.10.32.10  | Postgres, Redis                 | 2     |
 | vm-platform | platform  | 10.10.4.20   | Prometheus, Grafana             | 3     |
 
-The network is normative and lives in `../infrastructure/docs/zones.md`.
+The network is decided by `../infrastructure/environments/prod/terraform.tfvars`
+(`zones`, `vms`, `transit`) and explained in `../infrastructure/docs/zones.md`.
 
 ## Hard rules
 
