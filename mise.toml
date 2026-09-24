@@ -1,5 +1,5 @@
-# Tooling for the deployments repo.
-# Docker itself is not managed here: it comes from the VM, not the laptop.
+# Tooling for the gitops repo. The cluster tooling (kubectl, helm, manifest
+# validation) is declared here when the cluster arrives.
 [tools]
 sops = "3.13.3"
 age  = "1.3.2"
